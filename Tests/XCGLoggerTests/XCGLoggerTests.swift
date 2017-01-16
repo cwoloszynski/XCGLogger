@@ -6,14 +6,56 @@
 //  Copyright © 2014 Dave Wood, Cerebral Gardens.
 //  Some rights reserved: https://github.com/DaveWoodCom/XCGLogger/blob/master/LICENSE.txt
 //
+
 import Foundation
+import Dispatch
+
 import XCTest
 @testable import XCGLogger
 
 /// Tests
 class XCGLoggerTests: XCTestCase {
+
+#if os(Linux)
+    static let allTests = [
+            ("test_00010_DefaultInstance", test_00010_DefaultInstance),
+            ("test_00020_DistinctInstances", test_00020_DistinctInstances),
+            ("test_00022_DefaultInstanceDestinations", test_00022_DefaultInstanceDestinations),
+            ("test_00030_addDestination", test_00030_addDestination),
+            ("test_00040_RemoveDestination", test_00040_RemoveDestination),
+	    ("test_00050_DenyAdditionOfDestinationWithDuplicateIdentifier", test_00050_DenyAdditionOfDestinationWithDuplicateIdentifier),
+	    ("test_00052_CheckDestinationOwner", test_00052_CheckDestinationOwner),
+	    ("test_00054_FileDestinationOpenedFile", test_00054_FileDestinationOpenedFile),
+	    ("test_00060_AvoidStringInterpolationWithAutoclosure", test_00060_AvoidStringInterpolationWithAutoclosure),
+	    ("test_00070_ExecExecutes", test_00070_ExecExecutes),
+	    ("test_00080_ExecExecutesExactlyOnceWithNilReturnAndMultipleDestinations", test_00080_ExecExecutesExactlyOnceWithNilReturnAndMultipleDestinations),
+	    ("test_00090_ExecDoesntExecute", test_00090_ExecDoesntExecute),
+	    ("test_00100_DateFormatterIsCached", test_00100_DateFormatterIsCached),
+	    ("test_00110_CustomDateFormatter", test_00110_CustomDateFormatter),
+	    ("test_00120_VariousParameters", test_00120_VariousParameters),
+	    ("test_00130_NoMessageClosure", test_00130_NoMessageClosure),
+	    ("test_00140_QueueName", test_00140_QueueName),
+	    ("test_00150_ExtractTypeName", test_00150_ExtractTypeName),
+	    ("test_00160_TestLogFormattersAreApplied", test_00160_TestLogFormattersAreApplied),
+	    ("test_00170_LevelDescriptionOverrides", test_00170_LevelDescriptionOverrides),
+	    ("test_00180_PrePostFixLogFormatter", test_00180_PrePostFixLogFormatter),
+	    ("test_00200_TestLogFiltersAreApplied", test_00200_TestLogFiltersAreApplied),
+	    ("test_00210_TestTagFilter", test_00210_TestTagFilter),
+	    ("test_00220_TestDevFilter", test_00220_TestDevFilter),
+	    // ("test_00300_ObjectiveCExceptionHandling", test_00300_ObjectiveCExceptionHandling),
+	    ("test_01010_MultiThreaded", test_01010_MultiThreaded),
+	    ("test_01020_MultiThreaded2", test_01020_MultiThreaded2),
+	    ("test_01030_BackgroundLogging", test_01030_BackgroundLogging),
+	    ("test_xxxxx_AutoLogRotation", test_xxxxx_AutoLogRotation),
+	    ("test_99999_LastTest", test_99999_LastTest)
+	]
+#endif
+						
+
+
     /// This file's fileName for use in testing expected log messages
-    let fileName = { return (URL(fileURLWithPath:#file).lastPathComponent }()
+
+    let fileName = { return URL(fileURLWithPath:#file).lastPathComponent }()
 
     /// Calculate a base identifier to use for the giving function name.
     ///
@@ -159,7 +201,7 @@ class XCGLoggerTests: XCTestCase {
     func test_00054_FileDestinationOpenedFile() {
         let log: XCGLogger = XCGLogger(identifier: functionIdentifier())
 
-        let logPath: String = ("/tmp/XCGLogger_Testing.log" as NSString).expandingTildeInPath
+        let logPath: String = "/tmp/XCGLogger_Testing.log"
         var fileDestination: FileDestination = FileDestination(writeToFile: logPath, identifier: log.identifier + ".fileDestination.1", shouldAppend: true)
 
         XCTAssert(fileDestination.owner == nil, "Fail: newly created FileDestination has an owner set when it should be nil")
@@ -409,12 +451,13 @@ class XCGLoggerTests: XCTestCase {
         let labelDirectlyRead: String = logQueue.label
         var labelExtracted: String? = nil
 
+#if !os(Linux)
         logQueue.sync {
             labelExtracted = DispatchQueue.currentQueueLabel
         }
 
         XCTAssert(labelExtracted != nil, "Fail: Didn't get a label for the current queue")
-
+#endif
         print("labelDirectlyRead: `\(labelDirectlyRead)`")
         print("labelExtracted: `\(labelExtracted!)`")
 
@@ -752,12 +795,14 @@ class XCGLoggerTests: XCTestCase {
         testDestination.add(expectedLogMessage: "[\(XCGLogger.Level.debug)] [\(fileName)] \(#function) > \(exceptionMessage)")
         XCTAssert(testDestination.remainingNumberOfExpectedLogMessages == 1, "Fail: Didn't correctly load all of the expected log messages")
 
+#if !os(Linux)
         _try({
             _throw(name: exceptionMessage)
         },
         catch: { (exception: NSException) in
             log.debug(exception)
         })
+#endif
 
         XCTAssert(testDestination.remainingNumberOfExpectedLogMessages == 0, "Fail: Didn't receive all expected log lines")
         XCTAssert(testDestination.numberOfUnexpectedLogMessages == 0, "Fail: Received an unexpected log line")
@@ -788,9 +833,11 @@ class XCGLoggerTests: XCTestCase {
         // TODO: Switch to DispatchQueue.apply() when/if it is implemented in Swift 3.0
         // see: SE-0088 - https://github.com/apple/swift-evolution/blob/7fcba970b88a5de3d302d291dc7bc9dfba0f9399/proposals/0088-libdispatch-for-swift3.md
         // myConcurrentQueue.apply(linesToLog.count) { (index: Int) in
-        __dispatch_apply(linesToLog.count, myConcurrentQueue, { (index: Int) -> () in
+#if !os(Linux)
+	__dispatch_apply(linesToLog.count, myConcurrentQueue, { (index: Int) -> () in
             log.debug(linesToLog[index])
         })
+#endif
 
         XCTAssert(testDestination.remainingNumberOfExpectedLogMessages == 0, "Fail: Didn't receive all expected log lines")
         XCTAssert(testDestination.numberOfUnexpectedLogMessages == 0, "Fail: Received an unexpected log line")
@@ -821,11 +868,13 @@ class XCGLoggerTests: XCTestCase {
         // TODO: Switch to DispatchQueue.apply() when/if it is implemented in Swift 3.0
         // see: SE-0088 - https://github.com/apple/swift-evolution/blob/7fcba970b88a5de3d302d291dc7bc9dfba0f9399/proposals/0088-libdispatch-for-swift3.md
         // myConcurrentQueue.apply(linesToLog.count) { (index: Int) in
-        __dispatch_apply(linesToLog.count, myConcurrentQueue, { (index: Int) -> () in
+#if !os(Linux)
+	__dispatch_apply(linesToLog.count, myConcurrentQueue, { (index: Int) -> () in
             log.debug {
                 return "\(linesToLog[index])"
             }
         })
+#endif
 
         XCTAssert(testDestination.remainingNumberOfExpectedLogMessages == 0, "Fail: Didn't receive all expected log lines")
         XCTAssert(testDestination.numberOfUnexpectedLogMessages == 0, "Fail: Received an unexpected log line")
@@ -835,7 +884,11 @@ class XCGLoggerTests: XCTestCase {
     func test_01030_BackgroundLogging() {
         let log: XCGLogger = XCGLogger(identifier: functionIdentifier(), includeDefaultDestinations: false)
 
+#if !os(Linux)
         let systemDestination = AppleSystemLogDestination(identifier: log.identifier + ".systemDestination")
+#else
+        let systemDestination = SyslogDestination(identifier: log.identifier + ".syslog")
+#endif
         systemDestination.outputLevel = .debug
         systemDestination.showThreadName = true
 
@@ -913,7 +966,11 @@ class XCGLoggerTests: XCTestCase {
 
         // experiment with log rotation
 
-        let random = arc4random_uniform(2)
+#if !os(Linux)
+	let random = arc4random_uniform(2)
+#else
+	let random = 1.0
+#endif
         fileDestination.rotation = (random == 0) ? .onlyAtAppStart : .alsoWhileWriting
         fileDestination.rotationFileSizeBytes = 1024
         fileDestination.rotationFilesMax = 3

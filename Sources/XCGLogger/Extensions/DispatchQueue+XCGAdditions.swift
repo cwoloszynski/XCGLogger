@@ -9,6 +9,8 @@
 
 import Dispatch
 
+#if !os(Linux)
+
 /// Extensions to the DispatchQueue class
 extension DispatchQueue {
 
@@ -17,3 +19,4 @@ extension DispatchQueue {
         return String(validatingUTF8: __dispatch_queue_get_label(nil))
     }
 }
+#endif
