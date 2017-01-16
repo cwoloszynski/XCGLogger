@@ -6,14 +6,14 @@
 //  Copyright © 2014 Dave Wood, Cerebral Gardens.
 //  Some rights reserved: https://github.com/DaveWoodCom/XCGLogger/blob/master/LICENSE.txt
 //
-
+import Foundation
 import XCTest
 @testable import XCGLogger
 
 /// Tests
 class XCGLoggerTests: XCTestCase {
     /// This file's fileName for use in testing expected log messages
-    let fileName = { return (#file as NSString).lastPathComponent }()
+    let fileName = { return (URL(fileURLWithPath:#file).lastPathComponent }()
 
     /// Calculate a base identifier to use for the giving function name.
     ///
@@ -881,7 +881,7 @@ class XCGLoggerTests: XCTestCase {
       let logDir = documentsDirectory.appendingPathComponent("logs")
       if !FileManager.default.fileExists(atPath: logDir.path) {
         do {
-          try FileManager.default.createDirectory(atPath: logDir.path, withIntermediateDirectories: false, attributes: nil)
+          try FileManager.default.createDirectory(atPath: logDir.path, withIntermediateDirectories: false, attributes: [])
         } catch let error as NSError {
           print(error.localizedDescription);
         }
