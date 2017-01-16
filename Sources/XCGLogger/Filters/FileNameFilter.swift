@@ -60,7 +60,8 @@ open class FileNameFilter: FilterProtocol {
     ///     - false:    FileName already added.
     ///
     @discardableResult open func add(fileName: String) -> Bool {
-        return fileNamesToMatch.insert(excludePath ? (fileName as NSString).lastPathComponent : fileName).inserted
+        let lastPath = URL(fileURLWithPath: fileName).lastPathComponent
+                return fileNamesToMatch.insert(excludePath ? lastPath : fileName).inserted
     }
 
     /// Add a list of fileNames to the list of names to match against.
@@ -101,7 +102,8 @@ open class FileNameFilter: FilterProtocol {
     ///     - false:    Keep this log message and continue processing.
     ///
     open func shouldExclude(logDetails: inout LogDetails, message: inout String) -> Bool {
-        var matched: Bool = fileNamesToMatch.contains(excludePath ? (logDetails.fileName as NSString).lastPathComponent : logDetails.fileName)
+        let lastPath = URL(fileURLWithPath: logDetails.fileName).lastPathComponent
+        var matched: Bool = fileNamesToMatch.contains(excludePath ? lastPath : logDetails.fileName)
         if inverse {
             matched = !matched
         }

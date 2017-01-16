@@ -13,6 +13,9 @@
     import UIKit
 #endif
 
+import Dispatch
+import Foundation
+
 // MARK: - XCGLogger
 /// The main logging class
 open class XCGLogger: CustomDebugStringConvertible {

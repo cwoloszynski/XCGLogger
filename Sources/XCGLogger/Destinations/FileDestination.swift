@@ -126,23 +126,27 @@ open class FileDestination: BaseDestination {
             let fileManager: FileManager = FileManager.default
             let fileExists: Bool = fileManager.fileExists(atPath: writeToFileURL.path)
             if !shouldAppend || !fileExists {
-                fileManager.createFile(atPath: writeToFileURL.path, contents: nil, attributes: nil)
+                _ = fileManager.createFile(atPath: writeToFileURL.path, contents: nil, attributes: nil)
             }
 
             do {
                 logFileHandle = try FileHandle(forWritingTo: writeToFileURL)
                 if fileExists && shouldAppend {
-                    logFileHandle?.seekToEndOfFile()
+                    _ = logFileHandle?.seekToEndOfFile()
 
                     if let appendMarker = appendMarker,
                         let encodedData = "\(appendMarker)\n".data(using: String.Encoding.utf8) {
 
+#if !os(Linux)
                         _try({
                             self.logFileHandle?.write(encodedData)
                         },
                         catch: { (exception: NSException) in
                             owner._logln("Objective-C Exception occurred: \(exception)", level: .error)
                         })
+#else
+                        self.logFileHandle?.write(encodedData)
+#endif
                     }
                 }
             }
@@ -245,12 +249,16 @@ open class FileDestination: BaseDestination {
             self.applyFormatters(logDetails: &logDetails, message: &message)
 
             if let encodedData = "\(message)\n".data(using: String.Encoding.utf8) {
-                _try({
+#if !os(Linux)
+		_try({
                     self.logFileHandle?.write(encodedData)
                 },
                 catch: { (exception: NSException) in
                     self.owner?._logln("Objective-C Exception occurred: \(exception)", level: .error)
                 })
+#else
+                self.logFileHandle?.write(encodedData)
+#endif
             }
 
             guard self.rotation == .alsoWhileWriting else {return}
@@ -311,7 +319,7 @@ open class FileDestination: BaseDestination {
 
         // form rotation file name
         let formatter = DateFormatter()
-        formatter.locale = NSLocale(localeIdentifier: "en_US_POSIX") as Locale!
+        formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = rotationFileDateFormat
         let dateString = formatter.string(from: Date())
         let rotationFilePath = logFileDirectory! + logFileBaseName + dateString + logFileSuffix
@@ -351,18 +359,18 @@ open class FileDestination: BaseDestination {
         let fileManager = FileManager.default
 
         // assemble a dictionary of date:file
-        var fileDateMap = [NSDate: String]()
+        var fileDateMap = [Date: String]()
         let iter = fileManager.enumerator(atPath: logFileDirectory!)
         while let element = iter?.nextObject() as? String {
           let filePath = logFileDirectory! + element
           action = "get attributes of " + filePath
           let fileAttr = try fileManager.attributesOfItem(atPath: filePath)
-          let creationDate = fileAttr[FileAttributeKey.creationDate] as! NSDate
+          let creationDate = fileAttr[FileAttributeKey.creationDate] as! Date
           fileDateMap[creationDate] = filePath
         }
 
         // sort the dates in the dictionary, newest first
-        let compareDates: (NSDate, NSDate) -> Bool = {
+        let compareDates: (Date, Date) -> Bool = {
           return $0.compare($1 as Date) == ComparisonResult.orderedDescending
         }
         let sortedDates = Array(fileDateMap.keys).sorted(by: compareDates)

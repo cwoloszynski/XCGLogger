@@ -7,6 +7,7 @@
 //  Some rights reserved: https://github.com/DaveWoodCom/XCGLogger/blob/master/LICENSE.txt
 //
 
+#if !os(Linux)
 import Dispatch
 import Foundation
 
@@ -60,3 +61,4 @@ open class AppleSystemLogDestination: BaseDestination {
         }
     }
 }
+#endif

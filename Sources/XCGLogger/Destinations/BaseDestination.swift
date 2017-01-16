@@ -8,6 +8,7 @@
 //
 
 import Foundation
+import Dispatch
 
 // MARK: - BaseDestination
 /// A base class destination that doesn't actually output the log anywhere and is intented to be subclassed
@@ -93,6 +94,7 @@ open class BaseDestination: DestinationProtocol, CustomDebugStringConvertible {
             extendedDetails += "[\(owner.identifier)] "
         }
 
+#if !os(Linux)
         if showThreadName {
             if Thread.isMainThread {
                 extendedDetails += "[main] "
@@ -109,9 +111,11 @@ open class BaseDestination: DestinationProtocol, CustomDebugStringConvertible {
                 }
             }
         }
+#endif
 
         if showFileName {
-            extendedDetails += "[\((logDetails.fileName as NSString).lastPathComponent)\((showLineNumber ? ":" + String(logDetails.lineNumber) : ""))] "
+  	  let lastPath = URL(fileURLWithPath: logDetails.fileName).lastPathComponent
+          extendedDetails += "[\(lastPath)\((showLineNumber ? ":" + String(logDetails.lineNumber) : ""))] "
         }
         else if showLineNumber {
             extendedDetails += "[\(logDetails.lineNumber)] "
