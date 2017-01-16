@@ -137,16 +137,7 @@ open class FileDestination: BaseDestination {
                     if let appendMarker = appendMarker,
                         let encodedData = "\(appendMarker)\n".data(using: String.Encoding.utf8) {
 
-#if !os(Linux)
-                        _try({
-                            self.logFileHandle?.write(encodedData)
-                        },
-                        catch: { (exception: NSException) in
-                            owner._logln("Objective-C Exception occurred: \(exception)", level: .error)
-                        })
-#else
                         self.logFileHandle?.write(encodedData)
-#endif
                     }
                 }
             }
@@ -249,16 +240,7 @@ open class FileDestination: BaseDestination {
             self.applyFormatters(logDetails: &logDetails, message: &message)
 
             if let encodedData = "\(message)\n".data(using: String.Encoding.utf8) {
-#if !os(Linux)
-		_try({
-                    self.logFileHandle?.write(encodedData)
-                },
-                catch: { (exception: NSException) in
-                    self.owner?._logln("Objective-C Exception occurred: \(exception)", level: .error)
-                })
-#else
                 self.logFileHandle?.write(encodedData)
-#endif
             }
 
             guard self.rotation == .alsoWhileWriting else {return}

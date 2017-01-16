@@ -778,7 +778,7 @@ class XCGLoggerTests: XCTestCase {
     }
 
     /// Test Objective-C Exception Handling
-    func test_00300_ObjectiveCExceptionHandling() {
+  /*  func test_00300_ObjectiveCExceptionHandling() {
         let log: XCGLogger = XCGLogger(identifier: functionIdentifier())
         log.outputLevel = .debug
 
@@ -795,18 +795,10 @@ class XCGLoggerTests: XCTestCase {
         testDestination.add(expectedLogMessage: "[\(XCGLogger.Level.debug)] [\(fileName)] \(#function) > \(exceptionMessage)")
         XCTAssert(testDestination.remainingNumberOfExpectedLogMessages == 1, "Fail: Didn't correctly load all of the expected log messages")
 
-#if !os(Linux)
-        _try({
-            _throw(name: exceptionMessage)
-        },
-        catch: { (exception: NSException) in
-            log.debug(exception)
-        })
-#endif
-
         XCTAssert(testDestination.remainingNumberOfExpectedLogMessages == 0, "Fail: Didn't receive all expected log lines")
         XCTAssert(testDestination.numberOfUnexpectedLogMessages == 0, "Fail: Received an unexpected log line")
-    }
+    } 
+    */
 
     /// Test logging works correctly when logs are generated from multiple threads
     func test_01010_MultiThreaded() {
@@ -829,15 +821,18 @@ class XCGLoggerTests: XCTestCase {
 
         XCTAssert(testDestination.remainingNumberOfExpectedLogMessages == linesToLog.count, "Fail: Didn't correctly load all of the expected log messages")
 
-        let myConcurrentQueue = DispatchQueue(label: log.identifier + ".concurrentQueue", attributes: .concurrent)
+	let myConcurrentQueue = DispatchQueue(label: log.identifier + ".concurrentQueue", attributes: .concurrent)
         // TODO: Switch to DispatchQueue.apply() when/if it is implemented in Swift 3.0
         // see: SE-0088 - https://github.com/apple/swift-evolution/blob/7fcba970b88a5de3d302d291dc7bc9dfba0f9399/proposals/0088-libdispatch-for-swift3.md
-        // myConcurrentQueue.apply(linesToLog.count) { (index: Int) in
-#if !os(Linux)
 	__dispatch_apply(linesToLog.count, myConcurrentQueue, { (index: Int) -> () in
-            log.debug(linesToLog[index])
+            log.debug {
+                return "\(linesToLog[index])"
+            }
         })
-#endif
+
+
+	// Wait for the logger thread to process
+	testDestination.logQueue?.sync { }
 
         XCTAssert(testDestination.remainingNumberOfExpectedLogMessages == 0, "Fail: Didn't receive all expected log lines")
         XCTAssert(testDestination.numberOfUnexpectedLogMessages == 0, "Fail: Received an unexpected log line")
@@ -934,7 +929,7 @@ class XCGLoggerTests: XCTestCase {
       let logDir = documentsDirectory.appendingPathComponent("logs")
       if !FileManager.default.fileExists(atPath: logDir.path) {
         do {
-          try FileManager.default.createDirectory(atPath: logDir.path, withIntermediateDirectories: false, attributes: [])
+          try FileManager.default.createDirectory(atPath: logDir.path, withIntermediateDirectories: false, attributes: [:])
         } catch let error as NSError {
           print(error.localizedDescription);
         }

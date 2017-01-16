@@ -8,9 +8,6 @@
 //
 
 import Foundation
-#if !os(Linux)
-import ObjcExcceptionBridging
-#endif
 
 /// Extract the type name from the given object
 ///
@@ -21,24 +18,3 @@ func extractTypeName(_ someObject: Any) -> String {
     return (someObject is Any.Type) ? "\(someObject)" : "\(type(of: someObject))"
 }
 
-#if !os(Linux)
-// MARK: - Swiftier interface to the Objective-C exception handling functions
-/// Throw an Objective-C exception with the specified name/message/info
-///
-/// - parameter name:     The name of the exception to throw
-/// - parameter message:  The message to include in the exception (why it occurred)
-/// - parameter userInfo: A dictionary with arbitrary info to be passed along with the exception
-func _try(_ tryClosure: @escaping () -> (), catch catchClosure: @escaping (_ exception: NSException) -> (), finally finallyClosure: (() -> ())? = nil) {
-    _try_objc(tryClosure, catchClosure, finallyClosure ?? {})
-}
-
-/// Throw an Objective-C exception with the specified name/message/info
-///
-/// - parameter name:     The name of the exception to throw
-/// - parameter message:  The message to include in the exception (why it occurred)
-/// - parameter userInfo: A dictionary with arbitrary info to be passed along with the exception
-func _throw(name: String, message: String? = nil, userInfo: [AnyHashable: Any]? = nil) {
-    _throw_objc(NSException(name: NSExceptionName(rawValue: name), reason: message ?? name, userInfo: userInfo))
-}
-
-#endif
