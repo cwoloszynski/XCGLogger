@@ -911,8 +911,9 @@ class XCGLoggerTests: XCTestCase {
     // I don't know the meaning of the 5-digit test number :(
     func test_xxxxx_AutoLogRotation() {
       let documentsDirectory: URL = {
-        let urls = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-        return urls[urls.endIndex - 1]
+        // let urls = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        // return urls[urls.endIndex - 1]
+	return URL(fileURLWithPath:FileManager.default.currentDirectoryPath)
       }()
       let fileManager = FileManager.default
 
