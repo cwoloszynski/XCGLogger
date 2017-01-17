@@ -85,7 +85,7 @@ open class FileDestination: BaseDestination {
         self.shouldAppend = shouldAppend
         self.appendMarker = appendMarker
 
-        if writeToFile is NSString {
+        if writeToFile is String {
             writeToFileURL = URL(fileURLWithPath: writeToFile as! String)
         }
         else if writeToFile is URL {
@@ -93,6 +93,7 @@ open class FileDestination: BaseDestination {
         }
         else {
             writeToFileURL = nil
+            fatalError("FileDestinations must be initialized with a URL or a String")
         }
 
         super.init(owner: owner, identifier: identifier)
@@ -180,7 +181,7 @@ open class FileDestination: BaseDestination {
     @discardableResult open func rotateFile(to archiveToFile: Any) -> Bool {
         var archiveToFileURL: URL? = nil
 
-        if archiveToFile is NSString {
+        if archiveToFile is String {
             archiveToFileURL = URL(fileURLWithPath: archiveToFile as! String)
         }
         else if archiveToFile is URL {
