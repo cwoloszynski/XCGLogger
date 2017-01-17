@@ -270,7 +270,7 @@ open class FileDestination: BaseDestination {
     ///
     func rotateFileAuto(cause: Rotation) {  // parameter unnecessary. for clarity only
       let fileManager = FileManager.default
-      let path = writeToFileURL!.path
+        guard let path = writeToFileURL?.path else { fatalError("Cannot call rotateFileAuto with nil writeTOoFileURL") }
 
       // prepare parts of rotation file name for future use
       if (!rotateAutoCalledBefore) {
@@ -297,7 +297,7 @@ open class FileDestination: BaseDestination {
         // quit if log file is not large enough yet
         action = "get attributes of " + path
         let fileAttr = try fileManager.attributesOfItem(atPath: path)
-        let fileSize = fileAttr[FileAttributeKey.size] as! NSNumber
+        guard let fileSize = fileAttr[FileAttributeKey.size] as? NSNumber else { fatalError("Unknown type of size from fileAttr") }
         guard fileSize.intValue > rotationFileSizeBytes else {return}
 
         // form rotation file name
@@ -305,7 +305,8 @@ open class FileDestination: BaseDestination {
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = rotationFileDateFormat
         let dateString = formatter.string(from: Date())
-        let rotationFilePath = logFileDirectory! + logFileBaseName + dateString + logFileSuffix
+        guard let logFileDirectory = logFileDirectory else { fatalError("logFileDirectory not set") }
+        let rotationFilePath = logFileDirectory + logFileBaseName + dateString + logFileSuffix
 
         // actually rotate
         owner?._logln("Auto rotate for \(cause.description) at size \(fileSize.intValue)", level: .info)
@@ -343,9 +344,10 @@ open class FileDestination: BaseDestination {
 
         // assemble a dictionary of date:file
         var fileDateMap = [Date: String]()
-        let iter = fileManager.enumerator(atPath: logFileDirectory!)
+        guard let logFileDirectory = logFileDirectory else { fatalError("logFileDirectory is nil") }
+        let iter = fileManager.enumerator(atPath: logFileDirectory)
         while let element = iter?.nextObject() as? String {
-          let filePath = logFileDirectory! + element
+          let filePath = logFileDirectory + element
           action = "get attributes of " + filePath
           let fileAttr = try fileManager.attributesOfItem(atPath: filePath)
           let creationDate = fileAttr[FileAttributeKey.creationDate] as! Date
