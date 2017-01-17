@@ -981,11 +981,11 @@ class XCGLoggerTests: XCTestCase {
         // Add basic app info, version info etc, to the start of the logs
         log.logAppDetails()
 
-        /* fill log file faster.  With 1K log file max size, it's not needed
         for i in 0...5 {
           log.debug("\(i) a very very very very very very very very very long string to fill the log")
         }
-        */
+
+	XCGLogger.logQueue.sync { } // Make sure that the logging is completed
 
         let logFiles = log.mostRecentLogFiles(numFiles: 100)  // round up all files
 
