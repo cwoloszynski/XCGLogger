@@ -204,6 +204,7 @@ class XCGLoggerTests: XCTestCase {
         let logPath: String = "/tmp/XCGLogger_Testing.log"
         var fileDestination: FileDestination = FileDestination(writeToFile: logPath, identifier: log.identifier + ".fileDestination.1", shouldAppend: true)
 
+	XCTAssertNotNil(fileDestination)
         XCTAssert(fileDestination.owner == nil, "Fail: newly created FileDestination has an owner set when it should be nil")
         XCTAssert(fileDestination.logFileHandle == nil, "Fail: FileDestination has opened a file before it was assigned to a logger")
 

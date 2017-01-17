@@ -43,7 +43,7 @@ open class FileDestination: BaseDestination {
     open override var owner: XCGLogger? {
         didSet {
             if owner != nil {
-                let path = writeToFileURL!.path
+                guard let path = writeToFileURL?.path else { fatalError("Must have a path to a file to set the owner of a FileDestination") }
                 let indexAfterSlash = path.range(of: "/", options: .backwards)!.upperBound
                 logFileDirectory = path.substring(to: indexAfterSlash)
 
