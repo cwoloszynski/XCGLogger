@@ -350,9 +350,10 @@ open class FileDestination: BaseDestination {
             let filePath = logFileDirectory + element
             action = "get attributes of " + filePath
             let fileAttr = try fileManager.attributesOfItem(atPath: filePath)
-            guard let creationDate = fileAttr[FileAttributeKey.creationDate] as? NSDate else { fatalError("creationDate cast error") }
+            // Linux does not support creationDate, only modificationDate.  It still should be good enough to use that
+            guard let creationDate = fileAttr[FileAttributeKey.modificationDate] as? Date else { fatalError("modificationDate cast error") }
             
-            fileDateMap[creationDate as Date] = filePath
+            fileDateMap[creationDate] = filePath
         }
 
         // sort the dates in the dictionary, newest first
