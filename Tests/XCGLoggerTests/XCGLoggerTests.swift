@@ -821,14 +821,11 @@ class XCGLoggerTests: XCTestCase {
 
         XCTAssert(testDestination.remainingNumberOfExpectedLogMessages == linesToLog.count, "Fail: Didn't correctly load all of the expected log messages")
 
-	let myConcurrentQueue = DispatchQueue(label: log.identifier + ".concurrentQueue", attributes: .concurrent)
-        // TODO: Switch to DispatchQueue.apply() when/if it is implemented in Swift 3.0
-        // see: SE-0088 - https://github.com/apple/swift-evolution/blob/7fcba970b88a5de3d302d291dc7bc9dfba0f9399/proposals/0088-libdispatch-for-swift3.md
-	__dispatch_apply(linesToLog.count, myConcurrentQueue, { (index: Int) -> () in
+	DispatchQueue.concurrentPerform(iterations: linesToLog.count) { index in
             log.debug {
                 return "\(linesToLog[index])"
             }
-        })
+        }
 
 
 	// Wait for the logger thread to process
@@ -859,17 +856,11 @@ class XCGLoggerTests: XCTestCase {
 
         XCTAssert(testDestination.remainingNumberOfExpectedLogMessages == linesToLog.count, "Fail: Didn't correctly load all of the expected log messages")
 
-        let myConcurrentQueue = DispatchQueue(label: log.identifier + ".concurrentQueue", attributes: .concurrent)
-        // TODO: Switch to DispatchQueue.apply() when/if it is implemented in Swift 3.0
-        // see: SE-0088 - https://github.com/apple/swift-evolution/blob/7fcba970b88a5de3d302d291dc7bc9dfba0f9399/proposals/0088-libdispatch-for-swift3.md
-        // myConcurrentQueue.apply(linesToLog.count) { (index: Int) in
-#if !os(Linux)
-	__dispatch_apply(linesToLog.count, myConcurrentQueue, { (index: Int) -> () in
+	DispatchQueue.concurrentPerform(iterations: linesToLog.count) { index in
             log.debug {
                 return "\(linesToLog[index])"
             }
-        })
-#endif
+        }
 
         XCTAssert(testDestination.remainingNumberOfExpectedLogMessages == 0, "Fail: Didn't receive all expected log lines")
         XCTAssert(testDestination.numberOfUnexpectedLogMessages == 0, "Fail: Received an unexpected log line")
