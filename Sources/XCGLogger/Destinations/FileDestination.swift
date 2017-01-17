@@ -347,11 +347,12 @@ open class FileDestination: BaseDestination {
         guard let logFileDirectory = logFileDirectory else { fatalError("logFileDirectory is nil") }
         let iter = fileManager.enumerator(atPath: logFileDirectory)
         while let element = iter?.nextObject() as? String {
-          let filePath = logFileDirectory + element
-          action = "get attributes of " + filePath
-          let fileAttr = try fileManager.attributesOfItem(atPath: filePath)
-          let creationDate = fileAttr[FileAttributeKey.creationDate] as! Date
-          fileDateMap[creationDate] = filePath
+            let filePath = logFileDirectory + element
+            action = "get attributes of " + filePath
+            let fileAttr = try fileManager.attributesOfItem(atPath: filePath)
+            guard let creationDate = fileAttr[FileAttributeKey.creationDate] as? NSDate else { fatalError("creationDate cast error") }
+            
+            fileDateMap[creationDate as Date] = filePath
         }
 
         // sort the dates in the dictionary, newest first
@@ -362,7 +363,9 @@ open class FileDestination: BaseDestination {
 
         // assemble array of files using sorted dates
         for key in sortedDates {
-           sortedFiles.append(fileDateMap[key]!)
+            if let file = fileDateMap[key] {
+                sortedFiles.append(file)
+            }
         }
 
         return sortedFiles
