@@ -34,7 +34,7 @@ class XCGLoggerTests: XCTestCase {
 	    ("test_00110_CustomDateFormatter", test_00110_CustomDateFormatter),
 	    ("test_00120_VariousParameters", test_00120_VariousParameters),
 	    ("test_00130_NoMessageClosure", test_00130_NoMessageClosure),
-	    ("test_00140_QueueName", test_00140_QueueName),
+	    // ("test_00140_QueueName", test_00140_QueueName),
 	    ("test_00150_ExtractTypeName", test_00150_ExtractTypeName),
 	    ("test_00160_TestLogFormattersAreApplied", test_00160_TestLogFormattersAreApplied),
 	    ("test_00170_LevelDescriptionOverrides", test_00170_LevelDescriptionOverrides),
@@ -446,24 +446,24 @@ class XCGLoggerTests: XCTestCase {
         XCTAssert(testDestination.numberOfUnexpectedLogMessages == 0, "Fail: Received an unexpected log line")
     }
 
+#if !os(Linux)
     func test_00140_QueueName() {
         let logQueue = DispatchQueue(label: functionIdentifier() + ".serialQueue.😆")
 
         let labelDirectlyRead: String = logQueue.label
         var labelExtracted: String? = nil
 
-#if !os(Linux)
         logQueue.sync {
             labelExtracted = DispatchQueue.currentQueueLabel
         }
 
         XCTAssert(labelExtracted != nil, "Fail: Didn't get a label for the current queue")
-#endif
         print("labelDirectlyRead: `\(labelDirectlyRead)`")
         print("labelExtracted: `\(labelExtracted!)`")
 
         XCTAssert(labelDirectlyRead == labelExtracted!, "Fail: Didn't get the correct queue label")
     }
+#endif
 
     func test_00150_ExtractTypeName() {
         let log: XCGLogger = XCGLogger(identifier: functionIdentifier())
