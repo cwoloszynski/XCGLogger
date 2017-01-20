@@ -23,8 +23,23 @@ open class SyslogDestination: BaseDestination {
         }
     }
     
+    var identifierPointer: UnsafeMutablePointer<Int8>
+    
     public init(identifier: String) {
-        openlog(identifier, 0, LOG_USER);
+        
+        // openlog needs access to an const char * value that lasts during the call 
+        // but the normal Swift behavior to ensure that the const char * lasts only as
+        // long as the function call.  So, we need to create that const char * equivalent 
+        // in code
+        
+        let utf = identifier.utf8
+        let length = utf.count
+        self.identifierPointer = UnsafeMutablePointer<Int8>.allocate(capacity: length+1)
+        let temp = UnsafePointer<Int8>(identifier)
+
+        memcpy(self.identifierPointer, temp, length)
+        self.identifierPointer[length] = 0 // zero terminate
+        openlog(self.identifierPointer, 0, LOG_USER)
     }
     
     deinit {
